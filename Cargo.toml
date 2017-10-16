@@ -1,0 +1,18 @@
+[package]
+name = "cab403-rs"
+version = "0.1.0"
+authors = ["Shaun Karran <shaun.karran@gmail.com>"]
+
+[lib]
+name = "threadpool"
+path = "src/threadpool/lib.rs"
+
+[[bin]]
+name = "server"
+path = "src/bin/server.rs"
+
+[[bin]]
+name = "client"
+path = "src/bin/client.rs"
+
+[dependencies]
