@@ -61,7 +61,7 @@ impl Worker {
 
                 println!("Worker {} got a job; executing.", id);
 
-                (*job)();
+                job.call_box();
             }
         });
 
@@ -73,6 +73,20 @@ impl Worker {
 }
 
 // Job is a type alias for a Box that holds a closure (this specific combination of traits is essentially a closure).
-// This is done to simplfy the rest of the code as we dont need to specify a generic type to represent a closure on
-// the ThreadPool and the Worker.
-type Job = Box<FnOnce() + Send + 'static>;
+// This is because a generic type parameter can only be substituted for 1 concrete type at a time, where as trait
+// objects allow for multiple.
+type Job = Box<FnBox + Send + 'static>;
+
+// I don't really understand it but this is required to be able to move the closure out of the Box<T> and call it.
+// From the Rust Book:
+// > This is a very sneaky, complicated trick. Don’t worry too much if it doesn’t make perfect sense;
+// someday, it will be completely unnecessary.
+trait FnBox {
+    fn call_box(self: Box<Self>);
+}
+
+impl<F: FnOnce()> FnBox for F {
+    fn call_box(self: Box<F>) {
+        (*self)()
+    }
+}
