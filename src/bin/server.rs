@@ -10,7 +10,6 @@ use std::net::{Ipv4Addr, SocketAddrV4, TcpListener};
 
 use clap::App;
 use simplelog::{Config, TermLogger, WriteLogger, CombinedLogger, LogLevelFilter};
-// use simplelog::{Config, TermLogger, LogLevelFilter};
 
 use threadpool::ThreadPool;
 

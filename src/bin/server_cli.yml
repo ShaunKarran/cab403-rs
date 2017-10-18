@@ -1,0 +1,11 @@
+name: hangman-server
+version: "0.1"
+author: Shaun Karran <shaun.karran@gmail.com>
+about: Rust implementation of the server for the CAB403 hangman game.
+args:
+    - port:
+        short: p
+        long: port
+        help: The port to listen on for incoming connections
+        required: true
+        takes_value: true
