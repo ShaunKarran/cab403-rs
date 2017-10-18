@@ -1,11 +1,29 @@
+#[macro_use]
+extern crate log;
+
 use std::thread;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::sync::mpsc;
 
+// Job is a type alias for a Box that holds a closure (this specific combination of traits is essentially a closure).
+// This is because a generic type parameter can only be substituted for 1 concrete type at a time, where as trait
+// objects allow for multiple.
+type Job = Box<FnBox + Send + 'static>;
+
+enum Message {
+    NewJob(Job),
+    Terminate,
+}
+
+struct Worker {
+    id: usize,
+    thread: Option<thread::JoinHandle<()>>,
+}
+
 pub struct ThreadPool {
     workers: Vec<Worker>,
-    sender: mpsc::Sender<Job>,
+    sender: mpsc::Sender<Message>,
 }
 
 impl ThreadPool {
@@ -43,39 +61,58 @@ impl ThreadPool {
         let job = Box::new(function);
 
         // Send the job down the channel for the next available worker to execute.
-        self.sender.send(job).unwrap();
+        self.sender.send(Message::NewJob(job)).unwrap();
     }
 }
 
-struct Worker {
-    id: usize,
-    thread: thread::JoinHandle<()>,
-}
+impl Drop for ThreadPool {
+    fn drop(&mut self) {
+        debug!("Sending terminate message to all workers.");
 
-impl Worker {
-    fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<Job>>>) -> Worker {
-        let thread = thread::spawn(move || {
-            loop {
-                let receiver = receiver.lock().unwrap();
-                let job = receiver.recv().unwrap(); // blocks
+        for _ in &mut self.workers {
+            self.sender.send(Message::Terminate).unwrap();
+        }
 
-                println!("Worker {} got a job; executing.", id);
+        debug!("Shutting down all workers.");
 
-                job.call_box();
+        for worker in &mut self.workers {
+            debug!("Shutting down worker {}", worker.id);
+
+            if let Some(thread) = worker.thread.take() {
+                thread.join().unwrap();
             }
-        });
-
-        Worker {
-            id,
-            thread,
         }
     }
 }
 
-// Job is a type alias for a Box that holds a closure (this specific combination of traits is essentially a closure).
-// This is because a generic type parameter can only be substituted for 1 concrete type at a time, where as trait
-// objects allow for multiple.
-type Job = Box<FnBox + Send + 'static>;
+impl Worker {
+    fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<Message>>>) -> Worker {
+        let thread = thread::spawn(move || {
+            loop {
+                let receiver = receiver.lock().unwrap();
+                let message = receiver.recv().unwrap(); // blocks
+
+                match message {
+                    Message::NewJob(job) => {
+                        debug!("Worker {} got a job; executing", id);
+
+                        job.call_box();
+                    },
+                    Message::Terminate => {
+                        debug!("Worker {} was told to terminate", id);
+
+                        break;
+                    },
+                }
+            }
+        });
+
+        Worker {
+            id: id,
+            thread: Some(thread),
+        }
+    }
+}
 
 // I don't really understand it but this is required to be able to move the closure out of the Box<T> and call it.
 // From the Rust Book:

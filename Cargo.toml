@@ -16,3 +16,9 @@ name = "client"
 path = "src/bin/client.rs"
 
 [dependencies]
+log = "0.3.0"
+simplelog = "0.4.2"
+
+[dependencies.clap]
+version = "2.26.2"
+features = ["yaml"]
