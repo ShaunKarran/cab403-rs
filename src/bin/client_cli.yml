@@ -1,0 +1,17 @@
+name: hangman-client
+version: "0.1"
+author: Shaun Karran <shaun.karran@gmail.com>
+about: Rust implementation of the client for the CAB403 hangman game.
+args:
+    - hostname:
+        short: h
+        long: hostname
+        help: The hostname of the server
+        required: true
+        takes_value: true
+    - port:
+        short: p
+        long: port
+        help: The port on which the server is listening
+        required: true
+        takes_value: true

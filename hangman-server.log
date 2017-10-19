@@ -1,7 +1,0 @@
-21:55:57 [INFO] Server listening on socket 127.0.0.1:12345
-21:55:59 [DEBUG] threadpool: Worker 1 got a job; executing.
-21:55:59 [DEBUG] server: TcpStream { addr: V4(127.0.0.1:12345), peer: V4(127.0.0.1:55164), fd: 5 }
-21:55:59 [DEBUG] threadpool: Worker 0 got a job; executing.
-21:55:59 [DEBUG] server: TcpStream { addr: V4(127.0.0.1:12345), peer: V4(127.0.0.1:55166), fd: 5 }
-21:55:59 [DEBUG] threadpool: Worker 2 got a job; executing.
-21:55:59 [DEBUG] server: TcpStream { addr: V4(127.0.0.1:12345), peer: V4(127.0.0.1:55168), fd: 5 }

@@ -6,7 +6,7 @@ extern crate simplelog;
 extern crate threadpool;
 
 use std::fs::File;
-use std::net::{Ipv4Addr, SocketAddrV4, TcpListener};
+use std::net::{Ipv4Addr, SocketAddrV4, TcpListener, TcpStream};
 
 use clap::App;
 use simplelog::{Config, TermLogger, WriteLogger, CombinedLogger, LogLevelFilter};
@@ -34,8 +34,10 @@ fn main() {
     for stream in listener.incoming() {
         let stream = stream.unwrap();
 
-        pool.execute(move || {
-            debug!("{:?}", stream);
-        });
+        pool.execute(move || handle_client(stream));
     }
+}
+
+fn handle_client(stream: TcpStream) {
+    debug!("{:?}", stream);
 }
