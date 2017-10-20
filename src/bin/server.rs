@@ -3,17 +3,20 @@ extern crate bincode;
 extern crate clap;
 #[macro_use]
 extern crate log;
+extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate simplelog;
 extern crate threadpool;
 
 use std::fs::File;
-use std::io::Write;
+use std::io::{Read, Write};
 use std::net::{Ipv4Addr, SocketAddrV4, TcpListener, TcpStream};
 
 use bincode::{deserialize, serialize, Infinite};
 use clap::App;
+use serde::{Serialize};
+use serde::de::DeserializeOwned;
 use simplelog::{Config, TermLogger, WriteLogger, CombinedLogger, LogLevelFilter};
 
 use threadpool::ThreadPool;
@@ -40,8 +43,8 @@ fn main() {
 
     info!("Listening on socket {}", socket);
     let listener = TcpListener::bind(socket).unwrap();
-    let pool = ThreadPool::new(10);
 
+    let pool = ThreadPool::new(10);
     for stream in listener.incoming() {
         let mut stream = stream.unwrap();
 
@@ -50,8 +53,22 @@ fn main() {
 }
 
 fn handle_client(stream: &mut TcpStream) {
-    let message = TestMessage { display: String::from("This is a test message."), other_value: 12 };
-    let encoded_message = serialize(&message, Infinite).unwrap();
+    let message: TestMessage = read_and_decode(stream);
+    debug!("{:?}", message.display);
 
-    stream.write(&encoded_message).unwrap();
+    let send_message = TestMessage { display: String::from("This is a test message."), other_value: 12 };
+    encode_and_write(send_message, stream);
+}
+
+fn encode_and_write<T>(data: T, stream: &mut TcpStream) where T: Serialize {
+    let encoded_data = serialize(&data, Infinite).unwrap();
+
+    stream.write(&encoded_data).unwrap();
+}
+
+fn read_and_decode<T>(stream: &mut TcpStream) -> T where T: DeserializeOwned {
+    let mut input_buffer = [0; 256];
+    let _ = stream.read(&mut input_buffer).unwrap();
+
+    deserialize(&input_buffer).unwrap()
 }

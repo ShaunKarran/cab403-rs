@@ -3,17 +3,21 @@ extern crate bincode;
 extern crate clap;
 #[macro_use]
 extern crate log;
+extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate simplelog;
 
 use std::fs::File;
-use std::io::Read;
+use std::io::{Read, Write};
+use std::io::stdin;
 use std::net::{SocketAddrV4, TcpStream};
 use std::process;
 
 use clap::App;
 use bincode::{deserialize, serialize, Infinite};
+use serde::{Serialize};
+use serde::de::DeserializeOwned;
 use simplelog::{Config, TermLogger, WriteLogger, CombinedLogger, LogLevelFilter};
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
@@ -46,10 +50,25 @@ fn main() {
         }
     };
 
-    let mut encoded_message = [0; 256];
-    let _ = stream.read(&mut encoded_message).unwrap();
+    let mut user_input = String::new();
+    stdin().read_line(&mut user_input).unwrap();
 
-    let message: TestMessage = deserialize(&encoded_message[..]).unwrap();
+    encode_and_write(user_input, &mut stream);
+
+    let message: TestMessage = read_and_decode(&mut stream);
 
     println!("{:?}", message);
+}
+
+fn encode_and_write<T>(data: T, stream: &mut TcpStream) where T: Serialize {
+    let encoded_data = serialize(&data, Infinite).unwrap();
+
+    stream.write(&encoded_data).unwrap();
+}
+
+fn read_and_decode<T>(stream: &mut TcpStream) -> T where T: DeserializeOwned {
+    let mut input_buffer = [0; 256];
+    let _ = stream.read(&mut input_buffer).unwrap();
+
+    deserialize(&input_buffer).unwrap()
 }
