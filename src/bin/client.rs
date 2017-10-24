@@ -4,27 +4,19 @@ extern crate clap;
 #[macro_use]
 extern crate log;
 extern crate serde;
-#[macro_use]
-extern crate serde_derive;
 extern crate simplelog;
 
+extern crate cab403_rs;
+
 use std::fs::File;
-use std::io::{Read, Write};
 use std::io::stdin;
 use std::net::{SocketAddrV4, TcpStream};
 use std::process;
 
 use clap::App;
-use bincode::{deserialize, serialize, Infinite};
-use serde::{Serialize};
-use serde::de::DeserializeOwned;
 use simplelog::{Config, TermLogger, WriteLogger, CombinedLogger, LogLevelFilter};
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
-struct TestMessage {
-    display: String,
-    other_value: u32,
-}
+use cab403_rs::communication::{Command, Message, encode_and_write, read_and_decode};
 
 fn main() {
     CombinedLogger::init(
@@ -50,25 +42,29 @@ fn main() {
         }
     };
 
-    let mut user_input = String::new();
-    stdin().read_line(&mut user_input).unwrap();
+    loop {
+        let mut user_input = String::new();
+        stdin().read_line(&mut user_input).unwrap();
 
-    encode_and_write(user_input, &mut stream);
+        match user_input.as_ref() {
+            "q\n" => {
+                debug!("Sending Shutdown command.");
+                encode_and_write(Message::Command(Command::Shutdown), &mut stream);
+            },
+            _ => {
+                debug!("Sending placeholder message.");
+                encode_and_write(Message::Graphic(String::from("do_nothing")), &mut stream);
+            }
+        }
 
-    let message: TestMessage = read_and_decode(&mut stream);
-
-    println!("{:?}", message);
-}
-
-fn encode_and_write<T>(data: T, stream: &mut TcpStream) where T: Serialize {
-    let encoded_data = serialize(&data, Infinite).unwrap();
-
-    stream.write(&encoded_data).unwrap();
-}
-
-fn read_and_decode<T>(stream: &mut TcpStream) -> T where T: DeserializeOwned {
-    let mut input_buffer = [0; 256];
-    let _ = stream.read(&mut input_buffer).unwrap();
-
-    deserialize(&input_buffer).unwrap()
+        let message: Message = read_and_decode(&mut stream);
+        match message {
+            Message::Graphic(contents) => {
+                println!("{}", contents);
+            },
+            Message::Command(command) => {
+                debug!("Got command, {:?}", command)
+            }
+        }
+    }
 }
