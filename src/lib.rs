@@ -4,4 +4,5 @@ extern crate serde;
 extern crate serde_derive;
 
 pub mod communication;
+pub mod graphics;
 pub mod hangman;
