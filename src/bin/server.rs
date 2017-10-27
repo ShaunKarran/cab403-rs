@@ -17,7 +17,8 @@ use simplelog::{Config, TermLogger, WriteLogger, CombinedLogger, LogLevelFilter}
 
 use threadpool::ThreadPool;
 
-use cab403_rs::communication::{Command, Message, encode_and_write, read_and_decode};
+use cab403_rs::communication::{Command, Message, Selection, encode_and_write, read_and_decode};
+use cab403_rs::graphics;
 
 fn main() {
     CombinedLogger::init(
@@ -45,16 +46,34 @@ fn main() {
 }
 
 fn handle_client(stream: &mut TcpStream) {
-    loop {
+    encode_and_write(Message::Graphic(String::from(graphics::WELCOME_MESSAGE)), stream);
+
+    encode_and_write(Message::Graphic(String::from(graphics::MAIN_MENU)), stream);
+
+    'main: loop {
         let message = read_and_decode(stream);
         match message {
-            Message::Command(Command::Shutdown) => {
-                info!("Shutting down.");
-            },
-            _ => {
-                let send_message = Message::Graphic(String::from("Welcome!"));
-                encode_and_write(send_message, stream);
-            }
-        }
+            Message::MenuSelection(Selection::PlayHangman) => { play_hangman() },
+            Message::MenuSelection(Selection::ShowLeaderboard) => { show_leaderboard() },
+            Message::MenuSelection(Selection::Quit) => { quit() },
+            _ => { continue 'main },
+        };
     }
+
+    // let message = read_and_decode(stream);
+    // match message {
+    //     Message::Command(Command::Shutdown) => {
+    //         info!("Shutting down.");
+    //     },
+    //     _ => {
+    //         let send_message = Message::Graphic(String::from("Welcome!"));
+    //         encode_and_write(send_message, stream);
+    //     }
+    // }
 }
+
+fn play_hangman() {}
+
+fn show_leaderboard() {}
+
+fn quit() {}

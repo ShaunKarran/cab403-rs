@@ -43,6 +43,17 @@ fn main() {
     };
 
     loop {
+        let message: Message = read_and_decode(&mut stream);
+        match message {
+            Message::Graphic(contents) => {
+                println!("{}", contents);
+            },
+            Message::Command(command) => {
+                debug!("Got command, {:?}", command)
+            },
+            _ => {}
+        }
+
         let mut user_input = String::new();
         stdin().read_line(&mut user_input).unwrap();
 
@@ -54,16 +65,6 @@ fn main() {
             _ => {
                 debug!("Sending placeholder message.");
                 encode_and_write(Message::Graphic(String::from("do_nothing")), &mut stream);
-            }
-        }
-
-        let message: Message = read_and_decode(&mut stream);
-        match message {
-            Message::Graphic(contents) => {
-                println!("{}", contents);
-            },
-            Message::Command(command) => {
-                debug!("Got command, {:?}", command)
             }
         }
     }
