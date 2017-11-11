@@ -14,14 +14,14 @@ pub static PASSWORD_PROMPT: &str = "\nPlease enter your password --> ";
 
 pub static AUTH_FAILED: &str = "\nYou entered either an incorrect username or password - disconnecting...\n";
 
-pub static MAIN_MENU: &str = "
-\n
+pub static MAIN_MENU: &str ="
 \n
 ===== Main Manu =====\n
 \n
-<1> Play Hangman\n
-<2> Show Leaderboard\n
-<3> Quit\n";
+<1> Play Hangman
+<2> Show Leaderboard
+<3> Quit
+\n";
 
 pub static MENU_PROMPT: &str = "\nSelection option (1 - 3) --> ";
 
