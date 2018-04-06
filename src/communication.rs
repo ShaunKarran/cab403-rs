@@ -24,6 +24,23 @@ pub enum Message {
     MenuSelection(Selection),
 }
 
+#[derive(Serialize, Deserialize, PartialEq, Debug)]
+pub struct ServerMessage {
+    pub state: State,
+    pub graphic: String,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Debug)]
+pub enum State {
+    MainMenu,
+    Hangman,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Debug)]
+pub enum ClientMessage {
+    String,
+}
+
 pub fn encode_and_write<T>(data: T, stream: &mut TcpStream) where T: Serialize {
     let encoded_data = serialize(&data, Infinite).unwrap();
 

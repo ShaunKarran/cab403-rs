@@ -85,7 +85,7 @@ fn read(stream: &mut TcpStream) {
             },
             Message::Command(Command::Shutdown) => {
                 debug!("Recieved Shutdown command from server");
-                return;
+                return
             },
             _ => {}
         }
@@ -103,6 +103,7 @@ fn write(stream: &mut TcpStream) {
             "3" => {
                 debug!("Sending Quit command.");
                 encode_and_write(Message::MenuSelection(Selection::Quit), stream);
+                return
             },
             _ => {
                 debug!("Sending placeholder message.");
